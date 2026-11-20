@@ -1,4 +1,14 @@
-# trading-agents — a multi-agent stock analysis skill
+# trading-skills
+
+Agent skills for trading research, for **Claude Code** and other tools that load `SKILL.md` skills.
+
+| Skill | What it does |
+|---|---|
+| [`trading-agents`](skills/trading-agents/) | Multi-agent stock analysis: analysts → bull/bear debate → trader → risk debate → portfolio manager. Portfolio-aware, with optional moomoo integration. |
+
+---
+
+## trading-agents — a multi-agent stock analysis skill
 
 An agent skill for **Claude Code** (and other tools that load `SKILL.md` skills, such as Codex) that runs the [TradingAgents](https://github.com/TauricResearch/TradingAgents) methodology inside your coding agent:
 
@@ -14,7 +24,7 @@ It is **portfolio-aware**: give it your holdings and it judges the ticker agains
 
 > ⚠️ **Decision support, not financial advice.** LLM output can be wrong, and market data can be stale or missing. Verify everything before trading. This skill never places orders.
 
-## What you get
+### What you get
 
 - `reports/YYYY-MM-DD-TICKER.md`: the full report, with every stage's reasoning and a decision summary.
 - `reports/ledger.md`: one row per call, graded automatically as each horizon matures.
@@ -22,7 +32,7 @@ It is **portfolio-aware**: give it your holdings and it judges the ticker agains
 
 **See a full example:** [`docs/sample-report-MSFT.md`](docs/sample-report-MSFT.md). It's a complete run in which the analysts debate, the risk team argues over position size, and the portfolio manager trims an oversized position back under the 20% cap.
 
-## Install
+### Install
 
 1. Copy the skill folder into your skills directory:
 
@@ -33,8 +43,8 @@ It is **portfolio-aware**: give it your holdings and it judges the ticker agains
    | Codex | `<project>/.agents/skills/trading-agents/` |
 
    ```bash
-   git clone https://github.com/pyuan07/trading-agents-skill
-   cp -r trading-agents-skill/skills/trading-agents ~/.claude/skills/
+   git clone https://github.com/pyuan07/trading-skills
+   cp -r trading-skills/skills/trading-agents ~/.claude/skills/
    ```
 
 2. Give the skill a way to run its Python scripts. **Easiest: install [uv](https://docs.astral.sh/uv/getting-started/installation/)** and you're done. Each script declares its own dependencies, and `uv run` fetches them automatically the first time.
@@ -52,7 +62,7 @@ It is **portfolio-aware**: give it your holdings and it judges the ticker agains
    python -m venv .venv; .venv\Scripts\python.exe -m pip install -r scripts\requirements.txt
    ```
 
-## Use
+### Use
 
 Work from any folder you like. That folder becomes the skill's workspace: the skill reads your holdings from it and writes `work/` and `reports/` into it.
 
@@ -63,7 +73,7 @@ deep dive on 7203.T          ← "deep dive" / "full pipeline" runs every stage 
 review my portfolio          ← screens all holdings, then you pick which ones get a full run
 ```
 
-### Optional: your portfolio
+#### Optional: your portfolio
 
 Put these files in your working folder. Templates are in `skills/trading-agents/examples/`.
 
@@ -81,7 +91,7 @@ Put these files in your working folder. Templates are in `skills/trading-agents/
 
 Without either file the skill still works. It just analyzes the ticker without reference to a portfolio.
 
-### moomoo users: live positions and extra research (optional)
+#### moomoo users: live positions and extra research (optional)
 
 If the **moomoo MCP** is connected to your agent, the skill uses it automatically, and you don't need a CSV:
 
@@ -96,14 +106,14 @@ The skill only **reads** from moomoo. Its instructions forbid calling any order,
 
 Price history and indicators still come from Yahoo, so the skill works the same for everyone, moomoo customer or not.
 
-### Run depth and cost
+#### Run depth and cost
 
 | Depth | What runs | When |
 |---|---|---|
 | **lite** (default) | Scripts, plus subagents for 2 analysts and the bull/bear debate. Trader, risk and PM are written inline by the orchestrator. | Everyday use |
 | **full** | Every stage is a separate subagent | Ask for a "full pipeline" or "deep dive" |
 
-## Data sources
+### Data sources
 
 - **Yahoo Finance via [yfinance](https://github.com/ranaroussi/yfinance)**: prices, fundamentals, headlines, FX. It's free and needs no key. It is an unofficial API, so it's subject to Yahoo's terms and occasional breakage, and the skill falls back to web lookups when it fails.
 - **Web search** for context such as why a stock moved and breaking news.
