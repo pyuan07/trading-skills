@@ -1,0 +1,12 @@
+trading-agents skill
+Copyright 2026 the trading-agents skill contributors
+
+This project adapts the multi-agent methodology and agent role prompts of
+TradingAgents (https://github.com/TauricResearch/TradingAgents),
+Copyright Tauric Research, licensed under the Apache License, Version 2.0.
+
+Changes from the original: re-implemented as an agent skill (SKILL.md + subagent
+prompt files) instead of a LangGraph application; added a deterministic Python data
+layer (yfinance), portfolio-aware context (holdings, FX normalization, concentration,
+options exposure), a 5-way action space (BUY/ADD/HOLD/TRIM/SELL) with sizing/exit
+contract, and a self-grading decisions ledger.

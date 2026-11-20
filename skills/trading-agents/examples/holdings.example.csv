@@ -1,0 +1,6 @@
+ticker,name,qty,price,cost,market_value,currency,account,margin
+AAPL,Apple Inc.,50,230.00,180.00,11500.00,USD,brokerage,no
+MSFT,Microsoft Corp.,20,420.00,350.00,8400.00,USD,brokerage,yes
+7203.T,Toyota Motor,100,2800,2500,280000,JPY,brokerage,no
+ES3.SI,SPDR STI ETF,500,3.50,3.00,1750.00,SGD,brokerage,no
+SPY270115P00500000,SPY Jan-27 500 put,1,12.50,15.00,1250.00,USD,brokerage,no

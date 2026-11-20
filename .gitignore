@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Personal data — never commit (if you run the skill inside a clone)
+holdings*.csv
+!skills/trading-agents/examples/holdings.example.csv
+持仓-*.csv
+portfolio-profile.json
+work/
+reports/
+*.pem
+.env
