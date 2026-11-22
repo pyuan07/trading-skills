@@ -464,6 +464,32 @@
       background: #283548;
       color: #fff;
     }
+
+    .lang-toggle {
+      display: inline-flex;
+      background: #172136;
+      border: 1px solid #23314d;
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .lang-btn.active {
+      background: var(--accent-blue);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -480,29 +506,34 @@
     <!-- Selectors -->
     <div class="controls-section">
       <div class="select-group">
-        <span class="select-label">Stock</span>
+        <span class="select-label" data-i18n="stock">Stock</span>
         <select id="stockSelect" class="custom-select" onchange="onStockChange()">
           <!-- Populated by JS -->
         </select>
       </div>
 
       <div class="select-group">
-        <span class="select-label">Date</span>
+        <span class="select-label" data-i18n="date">Date</span>
         <select id="dateSelect" class="custom-select" onchange="onDateChange()">
           <!-- Populated by JS -->
         </select>
       </div>
 
+      <div class="lang-toggle" title="Switch Dashboard Language">
+        <button id="langBtnEn" class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button id="langBtnZh" class="lang-btn" onclick="setLang('zh')">中文</button>
+      </div>
+
       <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="handleFileSelect(event)">
-      <button class="btn-import" onclick="document.getElementById('fileInput').click()">+ Load JSON</button>
+      <button class="btn-import" data-i18n="loadJson" onclick="document.getElementById('fileInput').click()">+ Load JSON</button>
     </div>
   </header>
 
   <div class="container">
 
     <div id="emptyState" class="empty-state">
-      <h2>No analysis runs loaded yet</h2>
-      <p>Run the TradingAgents pipeline to populate <code>reports/data.js</code>, or click <strong>+ Load JSON</strong> above to inspect any <code>YYYY-MM-DD-TICKER.json</code> report.</p>
+      <h2 data-i18n="emptyTitle">No analysis runs loaded yet</h2>
+      <p data-i18n="emptyDesc">Run the TradingAgents pipeline to populate <code>reports/data.js</code>, or click <strong>+ Load JSON</strong> above to inspect any <code>YYYY-MM-DD-TICKER.json</code> report.</p>
     </div>
 
     <div id="dashboardContent">
@@ -523,37 +554,37 @@
         <!-- KPI Grid -->
         <div class="kpi-grid">
           <div class="kpi-card">
-            <div class="kpi-title">Price at Run</div>
+            <div class="kpi-title" data-i18n="kpiPrice">Price at Run</div>
             <div class="kpi-val" id="kpiPrice">—</div>
             <div class="kpi-subtext" id="kpiPriceSub"></div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-title">Target Size</div>
+            <div class="kpi-title" data-i18n="kpiSize">Target Size</div>
             <div class="kpi-val" id="kpiSize">—</div>
             <div class="kpi-subtext" id="kpiSizeSub"></div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-title">Stop Loss</div>
+            <div class="kpi-title" data-i18n="kpiStop">Stop Loss</div>
             <div class="kpi-val negative" id="kpiStop">—</div>
-            <div class="kpi-subtext" id="kpiStopSub">Hard Stop</div>
+            <div class="kpi-subtext" id="kpiStopSub" data-i18n="hardStop">Hard Stop</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-title">Target Price</div>
+            <div class="kpi-title" data-i18n="kpiTarget">Target Price</div>
             <div class="kpi-val positive" id="kpiTarget">—</div>
-            <div class="kpi-subtext" id="kpiTargetSub">Target</div>
+            <div class="kpi-subtext" id="kpiTargetSub" data-i18n="target">Target</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-title">Forward P/E</div>
+            <div class="kpi-title" data-i18n="kpiForwardPE">Forward P/E</div>
             <div class="kpi-val" id="kpiForwardPE">—</div>
             <div class="kpi-subtext" id="kpiTrailingPE"></div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-title">Free Cash Flow</div>
+            <div class="kpi-title" data-i18n="kpiFCF">Free Cash Flow</div>
             <div class="kpi-val" id="kpiFCF">—</div>
             <div class="kpi-subtext">TTM (OCF − CapEx)</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-title">SPY Benchmark</div>
+            <div class="kpi-title" data-i18n="kpiSPY">SPY Benchmark</div>
             <div class="kpi-val warning" id="kpiSPY">—</div>
             <div class="kpi-subtext" id="kpiSPYSub"></div>
           </div>
@@ -562,33 +593,33 @@
 
       <!-- Navigation Tabs -->
       <div class="tabs-bar">
-        <button class="tab-btn active" onclick="switchTab('tab-fundamentals', this)">📊 Fundamentals</button>
-        <button class="tab-btn" onclick="switchTab('tab-technicals', this)">📈 Technicals & Regime</button>
-        <button class="tab-btn" onclick="switchTab('tab-sentiment', this)">📰 News & Sentiment</button>
-        <button class="tab-btn" onclick="switchTab('tab-debate', this)">⚔️ Bull vs Bear Debate</button>
-        <button class="tab-btn" onclick="switchTab('tab-risk', this)">⚖️ Risk & Execution Plan</button>
-        <button class="tab-btn" onclick="switchTab('tab-json', this)">💻 Raw JSON</button>
+        <button class="tab-btn active" data-i18n="tabFundamentals" onclick="switchTab('tab-fundamentals', this)">📊 Fundamentals</button>
+        <button class="tab-btn" data-i18n="tabTechnicals" onclick="switchTab('tab-technicals', this)">📈 Technicals & Regime</button>
+        <button class="tab-btn" data-i18n="tabSentiment" onclick="switchTab('tab-sentiment', this)">📰 News & Sentiment</button>
+        <button class="tab-btn" data-i18n="tabDebate" onclick="switchTab('tab-debate', this)">⚔️ Bull vs Bear Debate</button>
+        <button class="tab-btn" data-i18n="tabRisk" onclick="switchTab('tab-risk', this)">⚖️ Risk & Execution Plan</button>
+        <button class="tab-btn" data-i18n="tabJson" onclick="switchTab('tab-json', this)">💻 Raw JSON</button>
       </div>
 
       <!-- Tab 1: Fundamentals -->
       <div id="tab-fundamentals" class="tab-panel active">
         <div class="section-card">
-          <h2><span>📊</span> Core Valuation & Financial Metrics</h2>
+          <h2><span>📊</span> <span data-i18n="secFundamentals">Core Valuation & Financial Metrics</span></h2>
           <div style="overflow-x: auto;">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Metric</th>
-                  <th>Value</th>
-                  <th>Metric</th>
-                  <th>Value</th>
+                  <th data-i18n="thMetric">Metric</th>
+                  <th data-i18n="thValue">Value</th>
+                  <th data-i18n="thMetric">Metric</th>
+                  <th data-i18n="thValue">Value</th>
                 </tr>
               </thead>
               <tbody id="fundamentalsTableBody"></tbody>
             </table>
           </div>
 
-          <h3 style="color: #93c5fd; font-size: 1rem; margin: 18px 0 10px 0;">Analyst Key Points</h3>
+          <h3 data-i18n="secKeyPoints" style="color: #93c5fd; font-size: 1rem; margin: 18px 0 10px 0;">Analyst Key Points</h3>
           <ul id="fundamentalsKeyPoints" style="margin-left: 20px; color: #cbd5e1; font-size: 0.9rem;"></ul>
         </div>
       </div>
@@ -596,15 +627,15 @@
       <!-- Tab 2: Technicals -->
       <div id="tab-technicals" class="tab-panel">
         <div class="section-card">
-          <h2><span>📈</span> Technical Readout & Market Regime</h2>
+          <h2><span>📈</span> <span data-i18n="secTechnicals">Technical Readout & Market Regime</span></h2>
           <p id="technicalBiasText" style="margin-bottom: 16px; font-weight: 600; color: #fde68a;">Bias: Neutral</p>
           <div style="overflow-x: auto;">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Indicator / Signal</th>
-                  <th>Current Reading</th>
-                  <th>Interpretation</th>
+                  <th data-i18n="thIndicator">Indicator / Signal</th>
+                  <th data-i18n="thReading">Current Reading</th>
+                  <th data-i18n="thInterp">Interpretation</th>
                 </tr>
               </thead>
               <tbody id="technicalsTableBody"></tbody>
@@ -616,14 +647,14 @@
       <!-- Tab 3: News & Sentiment -->
       <div id="tab-sentiment" class="tab-panel">
         <div class="section-card">
-          <h2><span>📰</span> Catalysts & Market Sentiment</h2>
+          <h2><span>📰</span> <span data-i18n="secSentiment">Catalysts & Market Sentiment</span></h2>
           <div style="display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;">
             <div class="call-badge" id="sentimentBandBadge" style="font-size: 0.85rem; padding: 6px 14px;">Neutral</div>
             <div style="background: #172136; border: 1px solid #23314d; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
-              Score: <strong id="sentimentScoreText" style="color: #60a5fa;">—</strong>
+              <span data-i18n="lblScore">Score:</span> <strong id="sentimentScoreText" style="color: #60a5fa;">—</strong>
             </div>
             <div style="background: #172136; border: 1px solid #23314d; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
-              Confidence: <strong id="sentimentConfidenceText">—</strong>
+              <span data-i18n="lblConfidence">Confidence:</span> <strong id="sentimentConfidenceText">—</strong>
             </div>
           </div>
 
@@ -631,10 +662,10 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Headline</th>
-                  <th>Impact</th>
-                  <th>Summary</th>
+                  <th data-i18n="thDate">Date</th>
+                  <th data-i18n="thHeadline">Headline</th>
+                  <th data-i18n="thImpact">Impact</th>
+                  <th data-i18n="thSummary">Summary</th>
                 </tr>
               </thead>
               <tbody id="sentimentTableBody"></tbody>
@@ -647,13 +678,13 @@
       <div id="tab-debate" class="tab-panel">
         <div class="debate-grid">
           <div class="debate-col bull">
-            <h3 style="color: var(--accent-green); font-size: 1.2rem; margin-bottom: 10px;">🐂 Bull Researcher Thesis</h3>
+            <h3 data-i18n="secBull" style="color: var(--accent-green); font-size: 1.2rem; margin-bottom: 10px;">🐂 Bull Researcher Thesis</h3>
             <p id="bullSummaryText" style="font-size: 0.92rem; color: #cbd5e1;"></p>
             <div class="strong-point-box" id="bullStrongestPointText"></div>
           </div>
 
           <div class="debate-col bear">
-            <h3 style="color: var(--accent-red); font-size: 1.2rem; margin-bottom: 10px;">🐻 Bear Researcher Thesis</h3>
+            <h3 data-i18n="secBear" style="color: var(--accent-red); font-size: 1.2rem; margin-bottom: 10px;">🐻 Bear Researcher Thesis</h3>
             <p id="bearSummaryText" style="font-size: 0.92rem; color: #cbd5e1;"></p>
             <div class="strong-point-box" id="bearStrongestPointText"></div>
           </div>
@@ -663,10 +694,10 @@
       <!-- Tab 5: Risk & Execution -->
       <div id="tab-risk" class="tab-panel">
         <div class="section-card">
-          <h2><span>⚖️</span> Three-Way Risk Debate</h2>
+          <h2><span>⚖️</span> <span data-i18n="secRisk">Three-Way Risk Debate</span></h2>
           <div class="risk-grid" id="riskStancesGrid"></div>
 
-          <h3 style="color: #fff; font-size: 1.1rem; margin: 24px 0 12px 0;">Portfolio Manager Execution Mandates</h3>
+          <h3 data-i18n="secMandates" style="color: #fff; font-size: 1.1rem; margin: 24px 0 12px 0;">Portfolio Manager Execution Mandates</h3>
           <ul id="executionMandatesList" style="margin-left: 20px; color: #cbd5e1; font-size: 0.9rem;"></ul>
         </div>
       </div>
@@ -675,8 +706,8 @@
       <div id="tab-json" class="tab-panel">
         <div class="section-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h2 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;"><span>💻</span> Raw Data Payload (JSON)</h2>
-            <button class="btn-copy" onclick="copyCurrentJSON()">Copy JSON</button>
+            <h2 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;"><span>💻</span> <span data-i18n="secJson">Raw Data Payload (JSON)</span></h2>
+            <button class="btn-copy" data-i18n="copyJson" onclick="copyCurrentJSON()">Copy JSON</button>
           </div>
           <pre class="json-viewer" id="rawJsonViewer"></pre>
         </div>
@@ -688,6 +719,180 @@
   <script>
     let runsData = Array.isArray(window.TRADING_AGENTS_RUNS) ? [...window.TRADING_AGENTS_RUNS] : [];
     let currentRun = null;
+    let currentLang = localStorage.getItem("ta_dashboard_lang") || "en";
+
+    const I18N = {
+      en: {
+        stock: "Stock",
+        date: "Date",
+        loadJson: "+ Load JSON",
+        emptyTitle: "No analysis runs loaded yet",
+        emptyDesc: "Run the TradingAgents pipeline to populate <code>reports/data.js</code>, or click <strong>+ Load JSON</strong> above to inspect any <code>YYYY-MM-DD-TICKER.json</code> report.",
+        kpiPrice: "Price at Run",
+        kpiSize: "Target Size",
+        kpiStop: "Stop Loss",
+        hardStop: "Hard Stop",
+        kpiTarget: "Target Price",
+        target: "Target",
+        kpiForwardPE: "Forward P/E",
+        kpiFCF: "Free Cash Flow",
+        kpiSPY: "SPY Benchmark",
+        tabFundamentals: "📊 Fundamentals",
+        tabTechnicals: "📈 Technicals & Regime",
+        tabSentiment: "📰 News & Sentiment",
+        tabDebate: "⚔️ Bull vs Bear Debate",
+        tabRisk: "⚖️ Risk & Execution Plan",
+        tabJson: "💻 Raw JSON",
+        secFundamentals: "Core Valuation & Financial Metrics",
+        thMetric: "Metric",
+        thValue: "Value",
+        secKeyPoints: "Analyst Key Points",
+        secTechnicals: "Technical Readout & Market Regime",
+        thIndicator: "Indicator / Signal",
+        thReading: "Current Reading",
+        thInterp: "Interpretation",
+        secSentiment: "Catalysts & Market Sentiment",
+        lblScore: "Score:",
+        lblConfidence: "Confidence:",
+        thDate: "Date",
+        thHeadline: "Headline",
+        thImpact: "Impact",
+        thSummary: "Summary",
+        secBull: "🐂 Bull Researcher Thesis",
+        secBear: "🐻 Bear Researcher Thesis",
+        secRisk: "Three-Way Risk Debate",
+        secMandates: "Portfolio Manager Execution Mandates",
+        secJson: "Raw Data Payload (JSON)",
+        copyJson: "Copy JSON",
+        finalCallPrefix: "FINAL CALL",
+        runDate: "Run Date",
+        pipeline: "Pipeline",
+        confidence: "Confidence",
+        trailing: "Trailing",
+        cap: "Cap",
+        overallBias: "Overall Bias",
+        strongestPoint: "STRONGEST POINT",
+        noKeyPoints: "No key points extracted.",
+        noCatalysts: "No catalysts extracted.",
+        noBull: "No bull summary available.",
+        noBear: "No bear summary available.",
+        noNotes: "No notes available.",
+        noMandates: "See markdown report for execution details.",
+        chosen: " (Chosen)",
+        copiedAlert: "JSON copied to clipboard!",
+        stances: { aggressive: "Aggressive Analyst", conservative: "Conservative Analyst", neutral: "Neutral Analyst" },
+        calls: { BUY: "BUY", ADD: "ADD", HOLD: "HOLD", TRIM: "TRIM", SELL: "SELL" },
+        confs: { low: "low", med: "med", high: "high" },
+        fLabels: {
+          mktCap: "Market Cap", fwdPe: "Forward P/E", trlPe: "Trailing P/E", peg: "PEG Ratio",
+          ps: "P/S (TTM)", pb: "P/B Ratio", gm: "Gross Margin", om: "Operating Margin",
+          nm: "Net Profit Margin", roe: "Return on Equity (ROE)", fcf: "Free Cash Flow (TTM)", de: "Debt / Equity",
+          revG: "Revenue Growth YoY", earnG: "Earnings Growth YoY", target: "Analyst Mean Target", rec: "Analyst Recommendation"
+        },
+        tLabels: {
+          rsi: "14-Day RSI", macd: "MACD (12,26,9)", bb: "Bollinger Bands", ma: "Moving Averages",
+          atr: "ATR (14)", vol: "Volume", sr: "Support / Resistance", regime: "Market Regime (Macro)",
+          oversold: "Oversold (<30)", overbought: "Overbought (>70)", neutralZone: "Neutral Zone",
+          momentum: "Momentum reading", volEnv: "Volatility envelope", trendTest: "Trendline test",
+          dailyVol: "Daily volatility", instPart: "Institutional participation", pivots: "Key price pivots"
+        }
+      },
+      zh: {
+        stock: "股票",
+        date: "日期",
+        loadJson: "+ 导入 JSON",
+        emptyTitle: "尚未加载任何分析报告",
+        emptyDesc: "运行 TradingAgents 流程以生成 <code>reports/data.js</code>，或点击上方 <strong>+ 导入 JSON</strong> 查看任意 <code>YYYY-MM-DD-TICKER.json</code> 报告。",
+        kpiPrice: "报告时股价",
+        kpiSize: "目标仓位",
+        kpiStop: "止损价",
+        hardStop: "硬止损",
+        kpiTarget: "目标价",
+        target: "目标价位",
+        kpiForwardPE: "预期市盈率",
+        kpiFCF: "自由现金流",
+        kpiSPY: "SPY 基准",
+        tabFundamentals: "📊 基本面分析",
+        tabTechnicals: "📈 技术面与宏观",
+        tabSentiment: "📰 资讯与情绪",
+        tabDebate: "⚔️ 多空辩论",
+        tabRisk: "⚖️ 风险与执行计划",
+        tabJson: "💻 原始 JSON",
+        secFundamentals: "核心估值与财务指标",
+        thMetric: "指标",
+        thValue: "数值",
+        secKeyPoints: "分析师核心要点",
+        secTechnicals: "技术面读数与市场环境",
+        thIndicator: "指标 / 信号",
+        thReading: "当前读数",
+        thInterp: "解读",
+        secSentiment: "催化剂与市场情绪",
+        lblScore: "情绪评分:",
+        lblConfidence: "置信度:",
+        thDate: "日期",
+        thHeadline: "标题",
+        thImpact: "影响",
+        thSummary: "摘要",
+        secBull: "🐂 多头研究员论点",
+        secBear: "🐻 空头研究员论点",
+        secRisk: "三方风险辩论",
+        secMandates: "投资组合经理执行指令",
+        secJson: "原始数据载荷 (JSON)",
+        copyJson: "复制 JSON",
+        finalCallPrefix: "最终评级",
+        runDate: "报告日期",
+        pipeline: "流程深度",
+        confidence: "置信度",
+        trailing: "滚动",
+        cap: "上限",
+        overallBias: "综合偏向",
+        strongestPoint: "核心论据",
+        noKeyPoints: "暂无提取的关键要点。",
+        noCatalysts: "暂无提取的催化剂事件。",
+        noBull: "暂无多头摘要。",
+        noBear: "暂无空头摘要。",
+        noNotes: "暂无备注。",
+        noMandates: "详见 Markdown 报告中的执行细节。",
+        chosen: " (采纳)",
+        copiedAlert: "JSON 已复制到剪贴板！",
+        stances: { aggressive: "激进派风控", conservative: "保守派风控", neutral: "中立派风控" },
+        calls: { BUY: "买入 BUY", ADD: "加仓 ADD", HOLD: "持有 HOLD", TRIM: "减仓 TRIM", SELL: "卖出 SELL" },
+        confs: { low: "低", med: "中", high: "高" },
+        fLabels: {
+          mktCap: "总市值", fwdPe: "预期 P/E", trlPe: "滚动 P/E", peg: "PEG 比率",
+          ps: "市销率 P/S", pb: "市净率 P/B", gm: "毛利率", om: "营业利润率",
+          nm: "净利润率", roe: "净资产收益率 (ROE)", fcf: "自由现金流 (TTM)", de: "资产负债率 (D/E)",
+          revG: "营收同比增长", earnG: "盈利同比增长", target: "分析师平均目标价", rec: "分析师评级"
+        },
+        tLabels: {
+          rsi: "14日 RSI", macd: "MACD (12,26,9)", bb: "布林带", ma: "移动均线",
+          atr: "ATR (14)", vol: "成交量", sr: "支撑位 / 阻力位", regime: "宏观市场环境",
+          oversold: "超卖 (<30)", overbought: "超买 (>70)", neutralZone: "中性区间",
+          momentum: "动能读数", volEnv: "波动率通道", trendTest: "趋势线测试",
+          dailyVol: "日均波动率", instPart: "机构参与度", pivots: "关键价格枢轴"
+        }
+      }
+    };
+
+    function setLang(lang) {
+      currentLang = lang === "zh" ? "zh" : "en";
+      localStorage.setItem("ta_dashboard_lang", currentLang);
+      applyStaticI18n();
+      if (currentRun) renderRun(currentRun);
+    }
+
+    function applyStaticI18n() {
+      const t = I18N[currentLang] || I18N.en;
+      document.getElementById("langBtnEn")?.classList.toggle("active", currentLang === "en");
+      document.getElementById("langBtnZh")?.classList.toggle("active", currentLang === "zh");
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (t[key] != null) {
+          if (key === "emptyDesc") el.innerHTML = t[key];
+          else el.textContent = t[key];
+        }
+      });
+    }
 
     function esc(val) {
       return String(val ?? '')
@@ -707,6 +912,7 @@
     }
 
     function init() {
+      applyStaticI18n();
       if (!runsData || runsData.length === 0) {
         document.getElementById("emptyState").style.display = "block";
         document.getElementById("dashboardContent").style.display = "none";
@@ -767,6 +973,8 @@
     }
 
     function renderRun(data) {
+      const ui = I18N[currentLang] || I18N.en;
+      const tr = (data.translations && data.translations[currentLang]) ? data.translations[currentLang] : {};
       const dec = data.decision || {};
       const f = data.fundamentals || {};
       const t = data.technicals || {};
@@ -777,14 +985,17 @@
 
       // Hero Top
       document.getElementById("heroTickerTitle").innerHTML = `${esc(data.ticker)} <span id="heroExchange" style="font-size: 1.1rem; color: #94a3b8; font-weight: 400;">${esc(data.exchange || '')}</span>`;
-      document.getElementById("heroSubtitle").textContent = `${data.company_name || data.ticker} • Run Date: ${data.date || 'n/a'} • Pipeline: ${data.run_depth || 'lite'} • Confidence: ${dec.confidence || '--'}`;
+      const confDisplay = ui.confs[dec.confidence] || dec.confidence || '--';
+      document.getElementById("heroSubtitle").textContent = `${data.company_name || data.ticker} • ${ui.runDate}: ${data.date || 'n/a'} • ${ui.pipeline}: ${data.run_depth || 'lite'} • ${ui.confidence}: ${confDisplay}`;
 
       const call = dec.call || 'HOLD';
+      const callLabel = (ui.calls && ui.calls[call]) || call;
       const badge = document.getElementById("heroCallBadge");
-      badge.textContent = `FINAL CALL: ${call}`;
+      badge.textContent = `${ui.finalCallPrefix}: ${callLabel}`;
       badge.className = `call-badge call-${call}`;
 
-      document.getElementById("heroRationale").textContent = dec.rationale ? `"${dec.rationale}"` : '—';
+      const rationaleText = tr.rationale || dec.rationale;
+      document.getElementById("heroRationale").textContent = rationaleText ? `"${rationaleText}"` : '—';
 
       // KPIs
       document.getElementById("kpiPrice").textContent = typeof data.price === 'number' ? `$${data.price.toFixed(2)}` : 'n/a';
@@ -793,13 +1004,13 @@
       const kpiSize = document.getElementById("kpiSize");
       kpiSize.textContent = typeof dec.size_pct === 'number' ? fmtSignedPct(dec.size_pct) : 'n/a';
       kpiSize.className = `kpi-val ${typeof dec.size_pct === 'number' ? (dec.size_pct < 0 ? 'negative' : 'positive') : ''}`;
-      document.getElementById("kpiSizeSub").textContent = data.context?.profile?.max_position_pct != null ? `Cap: ${data.context.profile.max_position_pct}%` : '';
+      document.getElementById("kpiSizeSub").textContent = data.context?.profile?.max_position_pct != null ? `${ui.cap}: ${data.context.profile.max_position_pct}%` : '';
 
       document.getElementById("kpiStop").textContent = fmtNum(dec.stop);
       document.getElementById("kpiTarget").textContent = fmtNum(dec.target);
 
       document.getElementById("kpiForwardPE").textContent = f.pe_forward != null ? `${f.pe_forward}x` : 'n/a';
-      document.getElementById("kpiTrailingPE").textContent = f.pe_trailing != null ? `Trailing: ${f.pe_trailing}x` : '';
+      document.getElementById("kpiTrailingPE").textContent = f.pe_trailing != null ? `${ui.trailing}: ${f.pe_trailing}x` : '';
 
       document.getElementById("kpiFCF").textContent = f.fcf_ttm ? (String(f.fcf_ttm).startsWith('$') ? f.fcf_ttm : `$${f.fcf_ttm}`) : 'n/a';
       const spyVal = typeof data.spy_price === 'number' ? data.spy_price : mr.spy_price;
@@ -807,15 +1018,16 @@
       document.getElementById("kpiSPYSub").textContent = mr.spy_regime || '';
 
       // Fundamentals Table
+      const fl = ui.fLabels;
       const fRows = [
-        ["Market Cap", f.market_cap || 'n/a', "Forward P/E", f.pe_forward != null ? `${f.pe_forward}x` : 'n/a'],
-        ["Trailing P/E", f.pe_trailing != null ? `${f.pe_trailing}x` : 'n/a', "PEG Ratio", f.peg != null ? f.peg : 'n/a'],
-        ["P/S (TTM)", f.ps_ttm != null ? `${f.ps_ttm}x` : 'n/a', "P/B Ratio", f.pb != null ? `${f.pb}x` : 'n/a'],
-        ["Gross Margin", f.gross_margin != null ? `${f.gross_margin}%` : 'n/a', "Operating Margin", f.operating_margin != null ? `${f.operating_margin}%` : 'n/a'],
-        ["Net Profit Margin", f.net_margin != null ? `${f.net_margin}%` : 'n/a', "Return on Equity (ROE)", f.roe != null ? `${f.roe}%` : 'n/a'],
-        ["Free Cash Flow (TTM)", f.fcf_ttm ? `$${f.fcf_ttm}` : 'n/a', "Debt / Equity", f.debt_to_equity != null ? `${f.debt_to_equity}` : 'n/a'],
-        ["Revenue Growth YoY", fmtSignedPct(f.revenue_growth_yoy), "Earnings Growth YoY", fmtSignedPct(f.earnings_growth_yoy)],
-        ["Analyst Mean Target", f.analyst_target_mean != null ? `$${f.analyst_target_mean}` : 'n/a', "Analyst Recommendation", f.analyst_recommendation != null ? `${f.analyst_recommendation}` : 'n/a']
+        [fl.mktCap, f.market_cap || 'n/a', fl.fwdPe, f.pe_forward != null ? `${f.pe_forward}x` : 'n/a'],
+        [fl.trlPe, f.pe_trailing != null ? `${f.pe_trailing}x` : 'n/a', fl.peg, f.peg != null ? f.peg : 'n/a'],
+        [fl.ps, f.ps_ttm != null ? `${f.ps_ttm}x` : 'n/a', fl.pb, f.pb != null ? `${f.pb}x` : 'n/a'],
+        [fl.gm, f.gross_margin != null ? `${f.gross_margin}%` : 'n/a', fl.om, f.operating_margin != null ? `${f.operating_margin}%` : 'n/a'],
+        [fl.nm, f.net_margin != null ? `${f.net_margin}%` : 'n/a', fl.roe, f.roe != null ? `${f.roe}%` : 'n/a'],
+        [fl.fcf, f.fcf_ttm ? `$${f.fcf_ttm}` : 'n/a', fl.de, f.debt_to_equity != null ? `${f.debt_to_equity}` : 'n/a'],
+        [fl.revG, fmtSignedPct(f.revenue_growth_yoy), fl.earnG, fmtSignedPct(f.earnings_growth_yoy)],
+        [fl.target, f.analyst_target_mean != null ? `$${f.analyst_target_mean}` : 'n/a', fl.rec, f.analyst_recommendation != null ? `${f.analyst_recommendation}` : 'n/a']
       ];
       document.getElementById("fundamentalsTableBody").innerHTML = fRows.map(row => `
         <tr>
@@ -825,23 +1037,25 @@
       `).join('');
 
       // Fundamentals Key Points
+      const keyPoints = tr.key_points || f.key_points || [];
       const kpList = document.getElementById("fundamentalsKeyPoints");
-      kpList.innerHTML = (f.key_points || []).map(p => `<li>${esc(p)}</li>`).join('') || '<li>No key points extracted.</li>';
+      kpList.innerHTML = keyPoints.map(p => `<li>${esc(p)}</li>`).join('') || `<li>${esc(ui.noKeyPoints)}</li>`;
 
       // Technicals Table
-      document.getElementById("technicalBiasText").textContent = `Overall Bias: ${t.bias || 'Neutral'}`;
+      const tl = ui.tLabels;
+      document.getElementById("technicalBiasText").textContent = `${ui.overallBias}: ${tr.technical_bias || t.bias || 'Neutral'}`;
       const rsiInterp = typeof t.rsi_14 === 'number'
-        ? (t.rsi_14 < 30 ? '<span class="positive">Oversold (&lt;30)</span>' : (t.rsi_14 > 70 ? '<span class="negative">Overbought (&gt;70)</span>' : 'Neutral Zone'))
+        ? (t.rsi_14 < 30 ? `<span class="positive">${esc(tl.oversold)}</span>` : (t.rsi_14 > 70 ? `<span class="negative">${esc(tl.overbought)}</span>` : esc(tl.neutralZone)))
         : 'n/a';
       const tRows = [
-        ["14-Day RSI", t.rsi_14 != null ? esc(t.rsi_14) : 'n/a', rsiInterp],
-        ["MACD (12,26,9)", t.macd ? esc(`Line ${t.macd.line} / Signal ${t.macd.signal} / Hist ${t.macd.hist}`) : 'n/a', 'Momentum reading'],
-        ["Bollinger Bands", t.bollinger ? esc(`Lower ${t.bollinger.lower} / Mid ${t.bollinger.mid} / Upper ${t.bollinger.upper}`) : 'n/a', 'Volatility envelope'],
-        ["Moving Averages", t.moving_averages ? esc(`SMA50 ${t.moving_averages.sma_50 ?? 'n/a'} • SMA200 ${t.moving_averages.sma_200 ?? 'n/a'}`) : 'n/a', 'Trendline test'],
-        ["ATR (14)", t.atr_14 != null ? esc(t.atr_14) : 'n/a', 'Daily volatility'],
-        ["Volume", t.volume_last != null ? esc(`${Number(t.volume_last).toLocaleString()} (20d avg: ${t.volume_20d_avg != null ? Number(t.volume_20d_avg).toLocaleString() : 'n/a'})`) : 'n/a', 'Institutional participation'],
-        ["Support / Resistance", esc(`Supp: ${t.support || 'n/a'} • Res: ${t.resistance || 'n/a'}`), 'Key price pivots'],
-        ["Market Regime (Macro)", esc(`SPY: ${mr.spy_price ?? 'n/a'} • VIX: ${mr.vix ?? 'n/a'} • 10Y Yield: ${mr.us_10y_yield ?? 'n/a'}%`), esc(mr.spy_regime || '')]
+        [tl.rsi, t.rsi_14 != null ? esc(t.rsi_14) : 'n/a', rsiInterp],
+        [tl.macd, t.macd ? esc(`Line ${t.macd.line} / Signal ${t.macd.signal} / Hist ${t.macd.hist}`) : 'n/a', esc(tl.momentum)],
+        [tl.bb, t.bollinger ? esc(`Lower ${t.bollinger.lower} / Mid ${t.bollinger.mid} / Upper ${t.bollinger.upper}`) : 'n/a', esc(tl.volEnv)],
+        [tl.ma, t.moving_averages ? esc(`SMA50 ${t.moving_averages.sma_50 ?? 'n/a'} • SMA200 ${t.moving_averages.sma_200 ?? 'n/a'}`) : 'n/a', esc(tl.trendTest)],
+        [tl.atr, t.atr_14 != null ? esc(t.atr_14) : 'n/a', esc(tl.dailyVol)],
+        [tl.vol, t.volume_last != null ? esc(`${Number(t.volume_last).toLocaleString()} (20d avg: ${t.volume_20d_avg != null ? Number(t.volume_20d_avg).toLocaleString() : 'n/a'})`) : 'n/a', esc(tl.instPart)],
+        [tl.sr, esc(`Supp: ${t.support || 'n/a'} • Res: ${t.resistance || 'n/a'}`), esc(tl.pivots)],
+        [tl.regime, esc(`SPY: ${mr.spy_price ?? 'n/a'} • VIX: ${mr.vix ?? 'n/a'} • 10Y: ${mr.us_10y_yield ?? 'n/a'}%`), esc(mr.spy_regime || '')]
       ];
       document.getElementById("technicalsTableBody").innerHTML = tRows.map(row => `
         <tr>
@@ -851,15 +1065,17 @@
 
       // Sentiment
       const sBandBadge = document.getElementById("sentimentBandBadge");
-      const band = s.overall_band || 'Neutral';
+      const band = tr.sentiment_band || s.overall_band || 'Neutral';
+      const rawBand = String(s.overall_band || 'Neutral');
       sBandBadge.textContent = band;
-      sBandBadge.className = `call-badge call-${band.includes('Bull') ? 'BUY' : (band.includes('Bear') ? 'SELL' : 'HOLD')}`;
+      sBandBadge.className = `call-badge call-${rawBand.includes('Bull') ? 'BUY' : (rawBand.includes('Bear') ? 'SELL' : 'HOLD')}`;
       document.getElementById("sentimentScoreText").textContent = s.overall_score != null ? `${s.overall_score} / 10` : 'n/a';
-      document.getElementById("sentimentConfidenceText").textContent = s.confidence || 'n/a';
+      document.getElementById("sentimentConfidenceText").textContent = ui.confs[s.confidence] || s.confidence || 'n/a';
 
-      document.getElementById("sentimentTableBody").innerHTML = (s.catalysts || []).map(c => {
+      const catalysts = tr.catalysts || s.catalysts || [];
+      document.getElementById("sentimentTableBody").innerHTML = catalysts.map(c => {
         const imp = String(c.impact || '');
-        const color = imp.includes('Pos') ? 'var(--accent-green)' : (imp.includes('Neg') ? 'var(--accent-red)' : 'var(--accent-amber)');
+        const color = imp.includes('Pos') || imp.includes('利好') ? 'var(--accent-green)' : (imp.includes('Neg') || imp.includes('利空') ? 'var(--accent-red)' : 'var(--accent-amber)');
         return `
           <tr>
             <td>${esc(c.date || '')}</td>
@@ -868,35 +1084,39 @@
             <td>${esc(c.summary || '')}</td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="4">No catalysts extracted.</td></tr>';
+      }).join('') || `<tr><td colspan="4">${esc(ui.noCatalysts)}</td></tr>`;
 
       // Debate
-      document.getElementById("bullSummaryText").textContent = d.bull?.summary || 'No bull summary available.';
-      document.getElementById("bullStrongestPointText").textContent = `🎯 STRONGEST POINT: ${d.bull?.strongest_point || 'n/a'}`;
-      document.getElementById("bearSummaryText").textContent = d.bear?.summary || 'No bear summary available.';
-      document.getElementById("bearStrongestPointText").textContent = `⚠️ STRONGEST POINT: ${d.bear?.strongest_point || 'n/a'}`;
+      const trBull = tr.debate?.bull || {};
+      const trBear = tr.debate?.bear || {};
+      document.getElementById("bullSummaryText").textContent = trBull.summary || d.bull?.summary || ui.noBull;
+      document.getElementById("bullStrongestPointText").textContent = `🎯 ${ui.strongestPoint}: ${trBull.strongest_point || d.bull?.strongest_point || 'n/a'}`;
+      document.getElementById("bearSummaryText").textContent = trBear.summary || d.bear?.summary || ui.noBear;
+      document.getElementById("bearStrongestPointText").textContent = `⚠️ ${ui.strongestPoint}: ${trBear.strongest_point || d.bear?.strongest_point || 'n/a'}`;
 
       // Risk Stances
       const stances = [
-        { key: 'aggressive', label: 'Aggressive Analyst', color: '#60a5fa', badgeClass: 'call-BUY' },
-        { key: 'conservative', label: 'Conservative Analyst', color: '#f87171', badgeClass: 'call-SELL' },
-        { key: 'neutral', label: 'Neutral Analyst', color: '#38bdf8', badgeClass: 'call-HOLD' }
+        { key: 'aggressive', label: ui.stances.aggressive, color: '#60a5fa', badgeClass: 'call-BUY' },
+        { key: 'conservative', label: ui.stances.conservative, color: '#f87171', badgeClass: 'call-SELL' },
+        { key: 'neutral', label: ui.stances.neutral, color: '#38bdf8', badgeClass: 'call-HOLD' }
       ];
       document.getElementById("riskStancesGrid").innerHTML = stances.map(st => {
         const entry = r[st.key] || {};
-        const chosenTag = entry.chosen ? ' (Chosen)' : '';
+        const trEntry = tr.risk_debate?.[st.key] || {};
+        const chosenTag = entry.chosen ? ui.chosen : '';
         return `
           <div class="risk-box ${entry.chosen ? 'chosen' : ''}">
-            <h4 style="color:${st.color}; margin-bottom:8px;">${st.label}${chosenTag}</h4>
-            <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:12px;">${esc(entry.notes || 'No notes available.')}</p>
-            <div class="call-badge ${st.badgeClass}" style="font-size:0.75rem; padding:4px 10px;">${esc(entry.verdict || 'n/a')}</div>
+            <h4 style="color:${st.color}; margin-bottom:8px;">${esc(st.label)}${esc(chosenTag)}</h4>
+            <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:12px;">${esc(trEntry.notes || entry.notes || ui.noNotes)}</p>
+            <div class="call-badge ${st.badgeClass}" style="font-size:0.75rem; padding:4px 10px;">${esc(trEntry.verdict || entry.verdict || 'n/a')}</div>
           </div>
         `;
       }).join('');
 
       // Execution Mandates
+      const mandates = tr.execution_mandates || dec.execution_mandates || [];
       const emList = document.getElementById("executionMandatesList");
-      emList.innerHTML = (dec.execution_mandates || []).map(m => `<li>${esc(m)}</li>`).join('') || '<li>See markdown report for execution details.</li>';
+      emList.innerHTML = mandates.map(m => `<li>${esc(m)}</li>`).join('') || `<li>${esc(ui.noMandates)}</li>`;
 
       // Raw JSON
       document.getElementById("rawJsonViewer").textContent = JSON.stringify(data, null, 2);
@@ -936,8 +1156,9 @@
 
     function copyCurrentJSON() {
       if (!currentRun) return;
+      const ui = I18N[currentLang] || I18N.en;
       navigator.clipboard.writeText(JSON.stringify(currentRun, null, 2)).then(() => {
-        alert("JSON copied to clipboard!");
+        alert(ui.copiedAlert);
       });
     }
 

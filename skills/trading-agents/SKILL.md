@@ -22,6 +22,16 @@ All agent prompt files live in `agents/` next to this file. Dispatch each as a *
 
 Work dir for a run: `work/YYYY-MM-DD-TICKER/` (create at start). Outputs: `reports/YYYY-MM-DD-TICKER.md`, `reports/YYYY-MM-DD-TICKER.json`, `reports/data.js`, `reports/dashboard.html`, and `reports/ledger.md`.
 
+## Language support (`en` | `zh` | `both`)
+
+Language preference is resolved in priority order:
+1. **Explicit user request** (e.g. "用中文分析 GOOGL" → `zh`; "bilingual" / "both languages" → `both`; "in English" → `en`), passed as `--lang <en|zh|both>` to `stage0.py` and `finalize.py`.
+2. **`portfolio-profile.json`**: `"language": "en" | "zh" | "both"` (defaults to `"en"`).
+3. **Auto-detection**: if the user's request is written in Chinese, default to `zh`.
+
+- **When `zh`:** Append a `[Language Mandate]` to every dispatched subagent (and follow it in inline Stages 3–5): write all analysis, reasoning, tables, and the `RATIONALE:` text in fluent Simplified Chinese (简体中文), while keeping exact filenames and machine contract tokens (`Final call: **BUY**`, `ADD`, `HOLD`, `TRIM`, `SELL`, `SIZE_USD:`, `SIZE_PCT:`, `STOP:`, `TARGET:`, `Confidence: low|med|high`, `RATIONALE:`) in English so `finalize.py` parses them strictly.
+- **When `both`:** Run Stages 1–5 in the primary language (`en`), then before `finalize.py`, write `work/<run>/translations.json` containing the `zh` overlay (`{"zh": {"rationale": "...", "key_points": [...], "technical_bias": "...", "sentiment_band": "...", "catalysts": [...], "debate": {"bull": {"summary": "...", "strongest_point": "..."}, "bear": {"summary": "...", "strongest_point": "..."}}, "risk_debate": {"aggressive": {"verdict": "...", "notes": "..."}, "conservative": {"verdict": "...", "notes": "..."}, "neutral": {"verdict": "...", "notes": "..."}}, "execution_mandates": [...], "report_zh": "<full Chinese markdown report>"}}`). `finalize.py --lang both` embeds `translations` into the JSON/`data.js` and emits `reports/YYYY-MM-DD-TICKER.zh.md` alongside `reports/YYYY-MM-DD-TICKER.md`, enabling `dashboard.html`'s `[ EN | 中文 ]` toggle to switch both UI labels and AI narrative.
+
 ## Data-layer scripts (run with uv or the skill's venv, NEVER bare global python)
 
 Deterministic work (CSV/FX/ledger math, data fetching, report assembly) is done by Python scripts in `scripts/` next to this file.

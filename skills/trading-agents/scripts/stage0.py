@@ -42,8 +42,11 @@ PROFILE_DEFAULTS = {
     "max_position_pct": 20,
     "margin_comfort": "low",
     "horizon": "6-18 months",
+    "language": "en",
     "base_currency": "USD",
 }
+
+VALID_LANGUAGES = ("en", "zh", "both")
 
 BAND_30 = 0.03    # ±3% vs SPY counts FLAT at the 30-day horizon
 BAND_180 = 0.06   # ±6% at the 180-day horizon (more noise over 6 months)
@@ -446,6 +449,7 @@ def main() -> None:
     mode.add_argument("--portfolio-review", action="store_true", help="resolve ALL ledger rows, no Past-calls section")
     ap.add_argument("--run-dir", help="default: work/YYYY-MM-DD-<TICKER|portfolio>")
     ap.add_argument("--base-dir", default=".", help="working dir containing holdings.csv (or 持仓-*.csv), reports/, portfolio-profile.json")
+    ap.add_argument("--lang", choices=VALID_LANGUAGES, help="output language override: en, zh, or both")
     ap.add_argument("--skip-resolve", action="store_true",
                     help="portfolio-review per-ticker reruns: build the full per-ticker context.md "
                          "(holding banner, Past-calls section) without re-grading the ledger")
@@ -525,6 +529,12 @@ def main() -> None:
         max_pos_pct = float(profile.get("max_position_pct", 20))
     except (TypeError, ValueError):
         die(f"portfolio-profile.json max_position_pct is not a number: {profile.get('max_position_pct')!r}")
+
+    raw_lang = args.lang if args.lang else str(profile.get("language", "en")).strip().lower()
+    if raw_lang not in VALID_LANGUAGES:
+        warnings.append(f"portfolio-profile.json language {raw_lang!r} invalid (expected en|zh|both); defaulting to 'en'")
+        raw_lang = "en"
+    profile["language"] = raw_lang
 
     # 4. ledger reflection
     ledger_path = base / "reports" / "ledger.md"

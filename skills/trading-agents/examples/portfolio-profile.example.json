@@ -3,5 +3,6 @@
   "max_position_pct": 20,
   "margin_comfort": "low",
   "horizon": "6-18 months",
-  "notes": "Free text the portfolio manager must respect, e.g. 'never suggest options', 'prefer dividend payers'."
+  "language": "en",
+  "notes": "Free text the portfolio manager must respect, e.g. 'never suggest options', 'prefer dividend payers'. language: 'en' | 'zh' | 'both'."
 }

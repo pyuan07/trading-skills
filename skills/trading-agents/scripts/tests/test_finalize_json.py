@@ -5,7 +5,14 @@ import json
 import re
 from pathlib import Path
 
-from finalize import build_run_json, ensure_dashboard_html, parse_decision, update_data_js
+from finalize import (
+    _render_markdown_report,
+    _resolve_lang,
+    build_run_json,
+    ensure_dashboard_html,
+    parse_decision,
+    update_data_js,
+)
 
 
 SAMPLE_DECISION = """# Portfolio manager decision — NVDA — 2026-11-22
@@ -342,3 +349,45 @@ class TestDataJsAndDashboard:
         dash.write_text("<!-- custom -->", encoding="utf-8")
         assert ensure_dashboard_html(report_dir) is False
         assert dash.read_text(encoding="utf-8") == "<!-- custom -->"
+
+        # force=True refreshes from template
+        assert ensure_dashboard_html(report_dir, force=True) is True
+        content = dash.read_text(encoding="utf-8")
+        assert "ta_dashboard_lang" in content
+        assert "I18N" in content
+
+
+class TestBilingualSupport:
+    def test_resolve_lang_from_profile_and_cli(self, tmp_path):
+        assert _resolve_lang(tmp_path, None) == "en"
+        (tmp_path / "portfolio-profile.json").write_text('{"language": "both"}', encoding="utf-8")
+        assert _resolve_lang(tmp_path, None) == "both"
+        assert _resolve_lang(tmp_path, "zh") == "zh"
+
+    def test_build_run_json_attaches_language_and_translations(self, tmp_path):
+        run_dir = tmp_path / "work" / "2026-11-22-GOOGL"
+        run_dir.mkdir(parents=True)
+        (run_dir / "decision.md").write_text(SAMPLE_DECISION, encoding="utf-8")
+        (run_dir / "translations.json").write_text(
+            json.dumps({"zh": {"rationale": "估值极低但宏观波动较大"}}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        d = parse_decision(SAMPLE_DECISION)
+        data = build_run_json(
+            "GOOGL", run_dir, tmp_path, 265.29, 689.81, d, SAMPLE_DECISION, date_s="2026-11-22", lang="both"
+        )
+        assert data["language"] == "both"
+        assert data["translations"]["zh"]["rationale"] == "估值极低但宏观波动较大"
+
+    def test_render_markdown_report_zh(self, tmp_path):
+        run_dir = tmp_path / "work" / "2026-11-22-GOOGL"
+        run_dir.mkdir(parents=True)
+        (run_dir / "decision.md").write_text(SAMPLE_DECISION, encoding="utf-8")
+        d = parse_decision(SAMPLE_DECISION)
+        md, missing = _render_markdown_report(
+            "GOOGL", "2026-11-22", 265.29, 689.81, d, [], run_dir, lang="zh"
+        )
+        assert "# TradingAgents 投研报告 — GOOGL — 2026-11-22" in md
+        assert "## 决策摘要" in md
+        assert "## 投资组合经理最终决策" in md
+        assert "decision.md" not in missing

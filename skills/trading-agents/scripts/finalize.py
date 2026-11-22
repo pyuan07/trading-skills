@@ -23,6 +23,9 @@ from pathlib import Path
 
 from ta_common import DISCLAIMER, die, now_utc, quote, today, usd_quote
 
+VALID_LANGUAGES = ("en", "zh", "both")
+DISCLAIMER_ZH = "> ⚠️ 决策辅助工具，非投资建议。交易前请核实所有数据。"
+
 # (filename, section title) in report order; missing optional files are skipped with a note
 SECTIONS = [
     ("context.md", "Run context (Stage 0)"),
@@ -36,6 +39,20 @@ SECTIONS = [
     ("risk-conservative.md", "Risk debate — conservative"),
     ("risk-neutral.md", "Risk debate — neutral"),
     ("decision.md", "Portfolio manager decision"),
+]
+
+SECTIONS_ZH = [
+    ("context.md", "投资组合上下文 (阶段 0)"),
+    ("fundamentals.md", "基本面分析"),
+    ("technical.md", "技术面分析 (脚本生成)"),
+    ("news-sentiment.md", "资讯与市场情绪"),
+    ("bull.md", "多头论点"),
+    ("bear.md", "空头论点"),
+    ("trader-plan.md", "交易计划"),
+    ("risk-aggressive.md", "风险辩论 — 激进派"),
+    ("risk-conservative.md", "风险辩论 — 保守派"),
+    ("risk-neutral.md", "风险辩论 — 中立派"),
+    ("decision.md", "投资组合经理最终决策"),
 ]
 
 # Strict Stage 5 output contract: a "Final call:" line naming exactly ONE of
@@ -516,6 +533,18 @@ def _parse_risk_debate(run_dir: Path, decision_text: str) -> dict:
     return out
 
 
+def _load_translations(run_dir: Path) -> dict | None:
+    """Load optional bilingual overlay from work/<run>/translations.json."""
+    p = run_dir / "translations.json"
+    if not p.exists():
+        return None
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else None
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
 def build_run_json(
     ticker: str,
     run_dir: Path,
@@ -525,6 +554,7 @@ def build_run_json(
     d: dict,
     decision_text: str,
     date_s: str | None = None,
+    lang: str = "en",
 ) -> dict:
     """Assemble the structured JSON payload for reports/YYYY-MM-DD-TICKER.json."""
     ticker = ticker.upper()
@@ -542,11 +572,12 @@ def build_run_json(
 
     run_depth = "lite" if re.search(r"lite\s+depth", decision_text, re.IGNORECASE) else "full"
 
-    return {
+    payload = {
         "ticker": ticker,
         "company_name": company_name or ticker,
         "exchange": exchange,
         "date": date_s,
+        "language": lang,
         "run_depth": run_depth,
         "price": round(float(price_usd), 2),
         "spy_price": round(float(spy_now), 2),
@@ -571,6 +602,10 @@ def build_run_json(
         },
         "risk_debate": _parse_risk_debate(run_dir, decision_text),
     }
+    translations = _load_translations(run_dir)
+    if translations:
+        payload["translations"] = translations
+    return payload
 
 
 def update_data_js(data_js_path: Path, run_data: dict) -> str:
@@ -599,10 +634,10 @@ def update_data_js(data_js_path: Path, run_data: dict) -> str:
     return "replaced" if existed else "added"
 
 
-def ensure_dashboard_html(report_dir: Path, template_path: Path | None = None) -> bool:
-    """Copy the skill's dashboard.html template into report_dir if not already present."""
+def ensure_dashboard_html(report_dir: Path, template_path: Path | None = None, force: bool = False) -> bool:
+    """Copy the skill's dashboard.html template into report_dir if not already present (or force=True)."""
     dest = report_dir / "dashboard.html"
-    if dest.exists():
+    if dest.exists() and not force:
         return False
     src = template_path or (Path(__file__).resolve().parent.parent / "templates" / "dashboard.html")
     if not src.exists():
@@ -645,6 +680,95 @@ def _portfolio_total(run_dir):
     return float(m.group(1).replace(",", "")) if m else None
 
 
+def _resolve_lang(base: Path, cli_lang: str | None) -> str:
+    if cli_lang and cli_lang.lower() in VALID_LANGUAGES:
+        return cli_lang.lower()
+    p = base / "portfolio-profile.json"
+    try:
+        val = str(json.loads(p.read_text(encoding="utf-8")).get("language", "en")).strip().lower()
+        return val if val in VALID_LANGUAGES else "en"
+    except Exception:
+        return "en"
+
+
+def _render_markdown_report(
+    ticker: str,
+    date_s: str,
+    price_usd: float,
+    spy_now: float,
+    d: dict,
+    warns: list[str],
+    run_dir: Path,
+    lang: str = "en",
+) -> tuple[str, list[str]]:
+    is_zh = lang == "zh"
+    call, rationale, conf = d["call"], d["rationale"], d["conf"]
+    if is_zh:
+        parts = [
+            f"# TradingAgents 投研报告 — {ticker} — {date_s}",
+            "",
+            DISCLAIMER_ZH,
+            "",
+            f"数据截止: {now_utc()}。报告时股价: {price_usd:.2f} USD；SPY {spy_now:.2f}。",
+            "",
+            "## 决策摘要",
+            "",
+            f"**{call}** (置信度: {conf}) — {rationale}",
+            "",
+            f"仓位规模: {d['size_usd']} USD / {d['size_pct']}% · 止损: {d['stop']} · 目标价: {d['target']}",
+            "",
+        ]
+        if warns:
+            parts += ["## 仓位校验提示", ""]
+            parts += [f"- WARNING: {w}" for w in warns]
+            parts += [""]
+        sections = SECTIONS_ZH
+        missing_tpl = "_缺失阶段文件已跳过: {files}_"
+        sources_title = "## 数据来源"
+        sources_body = (
+            "数据主要来自 Yahoo Finance (yfinance 数据包 `data/` 目录)，结合各分析师章节引用的定向网页搜索。"
+            "仅在明确标注时使用 Alpha Vantage MCP。"
+        )
+    else:
+        parts = [
+            f"# TradingAgents Report — {ticker} — {date_s}",
+            "",
+            DISCLAIMER,
+            "",
+            f"Data as of: {now_utc()}. Price at report time: {price_usd:.2f} USD; SPY {spy_now:.2f}.",
+            "",
+            "## Decision summary",
+            "",
+            f"**{call}** ({conf} confidence) — {rationale}",
+            "",
+            f"Size: {d['size_usd']} USD / {d['size_pct']}% · Stop: {d['stop']} · Target: {d['target']}",
+            "",
+        ]
+        if warns:
+            parts += ["## Sizing checks", ""]
+            parts += [f"- WARNING: {w}" for w in warns]
+            parts += [""]
+        sections = SECTIONS
+        missing_tpl = "_Missing stage files skipped: {files}_"
+        sources_title = "## Sources"
+        sources_body = (
+            "Yahoo Finance via yfinance data pack (`data/` in the run dir), plus any targeted web searches "
+            "cited inside the analyst sections. Alpha Vantage MCP used only where noted."
+        )
+
+    missing = []
+    for fname, title in sections:
+        p = run_dir / fname
+        if p.exists():
+            parts += [f"## {title}", "", p.read_text(encoding="utf-8").strip(), "", "---", ""]
+        else:
+            missing.append(fname)
+    if missing:
+        parts += [missing_tpl.format(files=", ".join(missing)), ""]
+    parts += [sources_title, "", sources_body, ""]
+    return "\n".join(parts), missing
+
+
 def _max_pos_pct(base):
     p = base / "portfolio-profile.json"
     try:
@@ -683,11 +807,14 @@ def main() -> None:
     ap.add_argument("ticker")
     ap.add_argument("--run-dir", required=True)
     ap.add_argument("--base-dir", default=".")
+    ap.add_argument("--lang", choices=VALID_LANGUAGES, help="report language: en, zh, or both (defaults to portfolio-profile.json)")
+    ap.add_argument("--refresh-dashboard", action="store_true", help="overwrite existing reports/dashboard.html with latest template")
     args = ap.parse_args()
 
     ticker = args.ticker.upper()
     run_dir = Path(args.run_dir)
     base = Path(args.base_dir).resolve()
+    lang = _resolve_lang(base, args.lang)
 
     decision_path = run_dir / "decision.md"
     if not decision_path.exists():
@@ -718,37 +845,19 @@ def main() -> None:
     report_dir = base / "reports"
     report_dir.mkdir(exist_ok=True)
     report_path = report_dir / f"{date_s}-{ticker}.md"
-    parts = [
-        f"# TradingAgents Report — {ticker} — {date_s}",
-        "",
-        DISCLAIMER,
-        "",
-        f"Data as of: {now_utc()}. Price at report time: {price_usd:.2f} USD; SPY {spy_now:.2f}.",
-        "",
-        "## Decision summary",
-        "",
-        f"**{call}** ({conf} confidence) — {rationale}",
-        "",
-        f"Size: {d['size_usd']} USD / {d['size_pct']}% · Stop: {d['stop']} · Target: {d['target']}",
-        "",
-    ]
-    if warns:
-        parts += ["## Sizing checks", ""]
-        parts += [f"- WARNING: {w}" for w in warns]
-        parts += [""]
-    missing = []
-    for fname, title in SECTIONS:
-        p = run_dir / fname
-        if p.exists():
-            parts += [f"## {title}", "", p.read_text(encoding="utf-8").strip(), "", "---", ""]
-        else:
-            missing.append(fname)
-    if missing:
-        parts += [f"_Missing stage files skipped: {', '.join(missing)}_", ""]
-    parts += ["## Sources", "",
-              "Yahoo Finance via yfinance data pack (`data/` in the run dir), plus any targeted web searches "
-              "cited inside the analyst sections. Alpha Vantage MCP used only where noted.", ""]
-    report_path.write_text("\n".join(parts), encoding="utf-8")
+    primary_md_lang = "zh" if lang == "zh" else "en"
+    report_text, missing = _render_markdown_report(
+        ticker, date_s, price_usd, spy_now, d, warns, run_dir, lang=primary_md_lang
+    )
+    report_path.write_text(report_text, encoding="utf-8")
+
+    # optional bilingual Chinese markdown report when lang == "both"
+    zh_report_path = None
+    if lang == "both":
+        tr = _load_translations(run_dir) or {}
+        if isinstance(tr.get("report_zh"), str) and tr["report_zh"].strip():
+            zh_report_path = report_dir / f"{date_s}-{ticker}.zh.md"
+            zh_report_path.write_text(tr["report_zh"].strip() + "\n", encoding="utf-8")
 
     # ledger append
     ledger_path = report_dir / "ledger.md"
@@ -759,17 +868,19 @@ def main() -> None:
     action = upsert_ledger_row(ledger_path, row, date_s, ticker)
 
     # structured JSON report + offline dashboard bundle
-    run_json = build_run_json(ticker, run_dir, base, price_usd, spy_now, d, decision_text, date_s=date_s)
+    run_json = build_run_json(ticker, run_dir, base, price_usd, spy_now, d, decision_text, date_s=date_s, lang=lang)
     json_path = report_dir / f"{date_s}-{ticker}.json"
     tmp_json = json_path.with_suffix(".json.tmp")
     tmp_json.write_text(json.dumps(run_json, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     tmp_json.replace(json_path)
 
     data_js_action = update_data_js(report_dir / "data.js", run_json)
-    copied_dashboard = ensure_dashboard_html(report_dir)
+    copied_dashboard = ensure_dashboard_html(report_dir, force=args.refresh_dashboard)
 
     print(f"OK: report {report_path}")
-    print(f"    json {json_path} (data.js {data_js_action})")
+    if zh_report_path:
+        print(f"    report_zh {zh_report_path}")
+    print(f"    json {json_path} (data.js {data_js_action}, lang={lang})")
     if copied_dashboard:
         print(f"    dashboard {report_dir / 'dashboard.html'} (installed from template)")
     print(f"    ledger row {action}: {row}")
