@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradingAgents — Multi-Stock Intelligence Dashboard</title>
+  <script src="data.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --card-hover: #1e293b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.12);
+      --accent-red: #ef4444;
+      --accent-red-bg: rgba(239, 68, 68, 0.12);
+      --accent-amber: #f59e0b;
+      --accent-amber-bg: rgba(245, 158, 11, 0.12);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      padding-bottom: 60px;
+    }
+
+    /* Top Bar */
+    header.top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 13, 22, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Selector Controls */
+    .controls-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .select-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #172136;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid #23314d;
+    }
+
+    .select-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    select.custom-select {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    select.custom-select option {
+      background: #111827;
+      color: #fff;
+    }
+
+    .btn-import {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #93c5fd;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-import:hover {
+      background: #273549;
+      color: #fff;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    .empty-state {
+      background: var(--card-bg);
+      border: 1px dashed #334155;
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    .empty-state h2 {
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    /* Hero Card */
+    .hero-card {
+      background: linear-gradient(145deg, #131c31 0%, #0c1220 100%);
+      border: 1px solid #223252;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stock-info h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stock-sub {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .call-badge-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .call-badge {
+      font-size: 1.4rem;
+      font-weight: 900;
+      padding: 8px 22px;
+      border-radius: 10px;
+      letter-spacing: 0.05em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .call-BUY, .call-ADD {
+      background: var(--accent-green-bg);
+      color: var(--accent-green);
+      border: 2px solid var(--accent-green);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    }
+
+    .call-TRIM, .call-SELL {
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      border: 2px solid var(--accent-red);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+    }
+
+    .call-HOLD {
+      background: var(--accent-amber-bg);
+      color: var(--accent-amber);
+      border: 2px solid var(--accent-amber);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+    }
+
+    .rationale-strip {
+      font-size: 1.15rem;
+      font-style: italic;
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 4px solid var(--accent-blue);
+      padding: 12px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+    }
+
+    .kpi-card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: #374151;
+    }
+
+    .kpi-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #fff;
+    }
+
+    .kpi-subtext {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
+    .warning  { color: var(--accent-amber); }
+
+    /* Navigation Tabs */
+    .tabs-bar {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      background: var(--card-border);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: #1e293b;
+      border: 1px solid #334155;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Content Panels */
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Tables */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .section-card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 10px;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 14px 0;
+    }
+
+    table.data-table th {
+      background: #162032;
+      color: #cbd5e1;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    table.data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1a2334;
+      color: #cbd5e1;
+    }
+
+    table.data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Debate Grid */
+    .debate-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 850px) {
+      .debate-grid { grid-template-columns: 1fr; }
+    }
+
+    .debate-col {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 22px;
+      border-top: 4px solid #374151;
+    }
+
+    .debate-col.bull { border-color: var(--accent-green); }
+    .debate-col.bear { border-color: var(--accent-red); }
+
+    .strong-point-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+    .bull .strong-point-box {
+      background: var(--accent-green-bg);
+      border: 1px solid var(--accent-green);
+      color: #a7f3d0;
+    }
+    .bear .strong-point-box {
+      background: var(--accent-red-bg);
+      border: 1px solid var(--accent-red);
+      color: #fecaca;
+    }
+
+    /* Risk Stances */
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .risk-box {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .risk-box.chosen {
+      border: 2px solid var(--accent-blue);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+    }
+
+    /* JSON Viewer */
+    pre.json-viewer {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 18px;
+      color: #93c5fd;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      overflow-x: auto;
+      max-height: 550px;
+    }
+
+    .btn-copy {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .btn-copy:hover {
+      background: #283548;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Header -->
+  <header class="top-bar">
+    <div class="brand-section">
+      <div class="logo-text">
+        <span>⚡ TradingAgents</span>
+        <span class="logo-badge">JSON DASHBOARD</span>
+      </div>
+    </div>
+
+    <!-- Selectors -->
+    <div class="controls-section">
+      <div class="select-group">
+        <span class="select-label">Stock</span>
+        <select id="stockSelect" class="custom-select" onchange="onStockChange()">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+
+      <div class="select-group">
+        <span class="select-label">Date</span>
+        <select id="dateSelect" class="custom-select" onchange="onDateChange()">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+
+      <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="handleFileSelect(event)">
+      <button class="btn-import" onclick="document.getElementById('fileInput').click()">+ Load JSON</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <div id="emptyState" class="empty-state">
+      <h2>No analysis runs loaded yet</h2>
+      <p>Run the TradingAgents pipeline to populate <code>reports/data.js</code>, or click <strong>+ Load JSON</strong> above to inspect any <code>YYYY-MM-DD-TICKER.json</code> report.</p>
+    </div>
+
+    <div id="dashboardContent">
+      <!-- Hero Card -->
+      <div class="hero-card">
+        <div class="hero-top">
+          <div class="stock-info">
+            <h1 id="heroTickerTitle">— <span id="heroExchange" style="font-size: 1.1rem; color: #94a3b8; font-weight: 400;"></span></h1>
+            <div class="stock-sub" id="heroSubtitle">—</div>
+          </div>
+          <div class="call-badge-box">
+            <div class="call-badge" id="heroCallBadge">—</div>
+          </div>
+        </div>
+
+        <div class="rationale-strip" id="heroRationale">—</div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Price at Run</div>
+            <div class="kpi-val" id="kpiPrice">—</div>
+            <div class="kpi-subtext" id="kpiPriceSub"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Target Size</div>
+            <div class="kpi-val" id="kpiSize">—</div>
+            <div class="kpi-subtext" id="kpiSizeSub"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Stop Loss</div>
+            <div class="kpi-val negative" id="kpiStop">—</div>
+            <div class="kpi-subtext" id="kpiStopSub">Hard Stop</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Target Price</div>
+            <div class="kpi-val positive" id="kpiTarget">—</div>
+            <div class="kpi-subtext" id="kpiTargetSub">Target</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Forward P/E</div>
+            <div class="kpi-val" id="kpiForwardPE">—</div>
+            <div class="kpi-subtext" id="kpiTrailingPE"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Free Cash Flow</div>
+            <div class="kpi-val" id="kpiFCF">—</div>
+            <div class="kpi-subtext">TTM (OCF − CapEx)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">SPY Benchmark</div>
+            <div class="kpi-val warning" id="kpiSPY">—</div>
+            <div class="kpi-subtext" id="kpiSPYSub"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab('tab-fundamentals', this)">📊 Fundamentals</button>
+        <button class="tab-btn" onclick="switchTab('tab-technicals', this)">📈 Technicals & Regime</button>
+        <button class="tab-btn" onclick="switchTab('tab-sentiment', this)">📰 News & Sentiment</button>
+        <button class="tab-btn" onclick="switchTab('tab-debate', this)">⚔️ Bull vs Bear Debate</button>
+        <button class="tab-btn" onclick="switchTab('tab-risk', this)">⚖️ Risk & Execution Plan</button>
+        <button class="tab-btn" onclick="switchTab('tab-json', this)">💻 Raw JSON</button>
+      </div>
+
+      <!-- Tab 1: Fundamentals -->
+      <div id="tab-fundamentals" class="tab-panel active">
+        <div class="section-card">
+          <h2><span>📊</span> Core Valuation & Financial Metrics</h2>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Value</th>
+                  <th>Metric</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody id="fundamentalsTableBody"></tbody>
+            </table>
+          </div>
+
+          <h3 style="color: #93c5fd; font-size: 1rem; margin: 18px 0 10px 0;">Analyst Key Points</h3>
+          <ul id="fundamentalsKeyPoints" style="margin-left: 20px; color: #cbd5e1; font-size: 0.9rem;"></ul>
+        </div>
+      </div>
+
+      <!-- Tab 2: Technicals -->
+      <div id="tab-technicals" class="tab-panel">
+        <div class="section-card">
+          <h2><span>📈</span> Technical Readout & Market Regime</h2>
+          <p id="technicalBiasText" style="margin-bottom: 16px; font-weight: 600; color: #fde68a;">Bias: Neutral</p>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Indicator / Signal</th>
+                  <th>Current Reading</th>
+                  <th>Interpretation</th>
+                </tr>
+              </thead>
+              <tbody id="technicalsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: News & Sentiment -->
+      <div id="tab-sentiment" class="tab-panel">
+        <div class="section-card">
+          <h2><span>📰</span> Catalysts & Market Sentiment</h2>
+          <div style="display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;">
+            <div class="call-badge" id="sentimentBandBadge" style="font-size: 0.85rem; padding: 6px 14px;">Neutral</div>
+            <div style="background: #172136; border: 1px solid #23314d; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
+              Score: <strong id="sentimentScoreText" style="color: #60a5fa;">—</strong>
+            </div>
+            <div style="background: #172136; border: 1px solid #23314d; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
+              Confidence: <strong id="sentimentConfidenceText">—</strong>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Headline</th>
+                  <th>Impact</th>
+                  <th>Summary</th>
+                </tr>
+              </thead>
+              <tbody id="sentimentTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Bull vs Bear Debate -->
+      <div id="tab-debate" class="tab-panel">
+        <div class="debate-grid">
+          <div class="debate-col bull">
+            <h3 style="color: var(--accent-green); font-size: 1.2rem; margin-bottom: 10px;">🐂 Bull Researcher Thesis</h3>
+            <p id="bullSummaryText" style="font-size: 0.92rem; color: #cbd5e1;"></p>
+            <div class="strong-point-box" id="bullStrongestPointText"></div>
+          </div>
+
+          <div class="debate-col bear">
+            <h3 style="color: var(--accent-red); font-size: 1.2rem; margin-bottom: 10px;">🐻 Bear Researcher Thesis</h3>
+            <p id="bearSummaryText" style="font-size: 0.92rem; color: #cbd5e1;"></p>
+            <div class="strong-point-box" id="bearStrongestPointText"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Risk & Execution -->
+      <div id="tab-risk" class="tab-panel">
+        <div class="section-card">
+          <h2><span>⚖️</span> Three-Way Risk Debate</h2>
+          <div class="risk-grid" id="riskStancesGrid"></div>
+
+          <h3 style="color: #fff; font-size: 1.1rem; margin: 24px 0 12px 0;">Portfolio Manager Execution Mandates</h3>
+          <ul id="executionMandatesList" style="margin-left: 20px; color: #cbd5e1; font-size: 0.9rem;"></ul>
+        </div>
+      </div>
+
+      <!-- Tab 6: Raw JSON -->
+      <div id="tab-json" class="tab-panel">
+        <div class="section-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;"><span>💻</span> Raw Data Payload (JSON)</h2>
+            <button class="btn-copy" onclick="copyCurrentJSON()">Copy JSON</button>
+          </div>
+          <pre class="json-viewer" id="rawJsonViewer"></pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let runsData = Array.isArray(window.TRADING_AGENTS_RUNS) ? [...window.TRADING_AGENTS_RUNS] : [];
+    let currentRun = null;
+
+    function esc(val) {
+      return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function fmtNum(val, decimals = 2) {
+      return typeof val === 'number' && !Number.isNaN(val) ? val.toFixed(decimals) : 'n/a';
+    }
+
+    function fmtSignedPct(val) {
+      if (typeof val !== 'number' || Number.isNaN(val)) return 'n/a';
+      return `${val > 0 ? '+' : ''}${val}%`;
+    }
+
+    function init() {
+      if (!runsData || runsData.length === 0) {
+        document.getElementById("emptyState").style.display = "block";
+        document.getElementById("dashboardContent").style.display = "none";
+        return;
+      }
+      document.getElementById("emptyState").style.display = "none";
+      document.getElementById("dashboardContent").style.display = "block";
+      populateStockDropdown();
+    }
+
+    function populateStockDropdown(preferredTicker, preferredDate) {
+      const stockSelect = document.getElementById("stockSelect");
+      stockSelect.innerHTML = "";
+
+      const tickers = [...new Set(runsData.map(r => r.ticker).filter(Boolean))];
+      tickers.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        stockSelect.appendChild(opt);
+      });
+
+      if (preferredTicker && tickers.includes(preferredTicker)) {
+        stockSelect.value = preferredTicker;
+      }
+      onStockChange(preferredDate);
+    }
+
+    function onStockChange(preferredDate) {
+      const selectedTicker = document.getElementById("stockSelect").value;
+      const dateSelect = document.getElementById("dateSelect");
+      dateSelect.innerHTML = "";
+
+      const tickerRuns = runsData.filter(r => r.ticker === selectedTicker);
+      tickerRuns.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.date;
+        opt.textContent = r.date;
+        dateSelect.appendChild(opt);
+      });
+
+      if (preferredDate && tickerRuns.some(r => r.date === preferredDate)) {
+        dateSelect.value = preferredDate;
+      }
+      onDateChange();
+    }
+
+    function onDateChange() {
+      const selectedTicker = document.getElementById("stockSelect").value;
+      const selectedDate = document.getElementById("dateSelect").value;
+
+      currentRun = runsData.find(r => r.ticker === selectedTicker && r.date === selectedDate);
+      if (!currentRun && runsData.length > 0) currentRun = runsData[0];
+
+      if (currentRun) {
+        renderRun(currentRun);
+      }
+    }
+
+    function renderRun(data) {
+      const dec = data.decision || {};
+      const f = data.fundamentals || {};
+      const t = data.technicals || {};
+      const mr = data.market_regime || {};
+      const s = data.news_and_sentiment || {};
+      const d = data.debate || {};
+      const r = data.risk_debate || {};
+
+      // Hero Top
+      document.getElementById("heroTickerTitle").innerHTML = `${esc(data.ticker)} <span id="heroExchange" style="font-size: 1.1rem; color: #94a3b8; font-weight: 400;">${esc(data.exchange || '')}</span>`;
+      document.getElementById("heroSubtitle").textContent = `${data.company_name || data.ticker} • Run Date: ${data.date || 'n/a'} • Pipeline: ${data.run_depth || 'lite'} • Confidence: ${dec.confidence || '--'}`;
+
+      const call = dec.call || 'HOLD';
+      const badge = document.getElementById("heroCallBadge");
+      badge.textContent = `FINAL CALL: ${call}`;
+      badge.className = `call-badge call-${call}`;
+
+      document.getElementById("heroRationale").textContent = dec.rationale ? `"${dec.rationale}"` : '—';
+
+      // KPIs
+      document.getElementById("kpiPrice").textContent = typeof data.price === 'number' ? `$${data.price.toFixed(2)}` : 'n/a';
+      document.getElementById("kpiPriceSub").textContent = typeof t.price_change_1d === 'number' ? `${fmtSignedPct(t.price_change_1d)} 1d` : '';
+
+      const kpiSize = document.getElementById("kpiSize");
+      kpiSize.textContent = typeof dec.size_pct === 'number' ? fmtSignedPct(dec.size_pct) : 'n/a';
+      kpiSize.className = `kpi-val ${typeof dec.size_pct === 'number' ? (dec.size_pct < 0 ? 'negative' : 'positive') : ''}`;
+      document.getElementById("kpiSizeSub").textContent = data.context?.profile?.max_position_pct != null ? `Cap: ${data.context.profile.max_position_pct}%` : '';
+
+      document.getElementById("kpiStop").textContent = fmtNum(dec.stop);
+      document.getElementById("kpiTarget").textContent = fmtNum(dec.target);
+
+      document.getElementById("kpiForwardPE").textContent = f.pe_forward != null ? `${f.pe_forward}x` : 'n/a';
+      document.getElementById("kpiTrailingPE").textContent = f.pe_trailing != null ? `Trailing: ${f.pe_trailing}x` : '';
+
+      document.getElementById("kpiFCF").textContent = f.fcf_ttm ? (String(f.fcf_ttm).startsWith('$') ? f.fcf_ttm : `$${f.fcf_ttm}`) : 'n/a';
+      const spyVal = typeof data.spy_price === 'number' ? data.spy_price : mr.spy_price;
+      document.getElementById("kpiSPY").textContent = fmtNum(spyVal);
+      document.getElementById("kpiSPYSub").textContent = mr.spy_regime || '';
+
+      // Fundamentals Table
+      const fRows = [
+        ["Market Cap", f.market_cap || 'n/a', "Forward P/E", f.pe_forward != null ? `${f.pe_forward}x` : 'n/a'],
+        ["Trailing P/E", f.pe_trailing != null ? `${f.pe_trailing}x` : 'n/a', "PEG Ratio", f.peg != null ? f.peg : 'n/a'],
+        ["P/S (TTM)", f.ps_ttm != null ? `${f.ps_ttm}x` : 'n/a', "P/B Ratio", f.pb != null ? `${f.pb}x` : 'n/a'],
+        ["Gross Margin", f.gross_margin != null ? `${f.gross_margin}%` : 'n/a', "Operating Margin", f.operating_margin != null ? `${f.operating_margin}%` : 'n/a'],
+        ["Net Profit Margin", f.net_margin != null ? `${f.net_margin}%` : 'n/a', "Return on Equity (ROE)", f.roe != null ? `${f.roe}%` : 'n/a'],
+        ["Free Cash Flow (TTM)", f.fcf_ttm ? `$${f.fcf_ttm}` : 'n/a', "Debt / Equity", f.debt_to_equity != null ? `${f.debt_to_equity}` : 'n/a'],
+        ["Revenue Growth YoY", fmtSignedPct(f.revenue_growth_yoy), "Earnings Growth YoY", fmtSignedPct(f.earnings_growth_yoy)],
+        ["Analyst Mean Target", f.analyst_target_mean != null ? `$${f.analyst_target_mean}` : 'n/a', "Analyst Recommendation", f.analyst_recommendation != null ? `${f.analyst_recommendation}` : 'n/a']
+      ];
+      document.getElementById("fundamentalsTableBody").innerHTML = fRows.map(row => `
+        <tr>
+          <td><strong>${esc(row[0])}</strong></td><td>${esc(row[1])}</td>
+          <td><strong>${esc(row[2])}</strong></td><td>${esc(row[3])}</td>
+        </tr>
+      `).join('');
+
+      // Fundamentals Key Points
+      const kpList = document.getElementById("fundamentalsKeyPoints");
+      kpList.innerHTML = (f.key_points || []).map(p => `<li>${esc(p)}</li>`).join('') || '<li>No key points extracted.</li>';
+
+      // Technicals Table
+      document.getElementById("technicalBiasText").textContent = `Overall Bias: ${t.bias || 'Neutral'}`;
+      const rsiInterp = typeof t.rsi_14 === 'number'
+        ? (t.rsi_14 < 30 ? '<span class="positive">Oversold (&lt;30)</span>' : (t.rsi_14 > 70 ? '<span class="negative">Overbought (&gt;70)</span>' : 'Neutral Zone'))
+        : 'n/a';
+      const tRows = [
+        ["14-Day RSI", t.rsi_14 != null ? esc(t.rsi_14) : 'n/a', rsiInterp],
+        ["MACD (12,26,9)", t.macd ? esc(`Line ${t.macd.line} / Signal ${t.macd.signal} / Hist ${t.macd.hist}`) : 'n/a', 'Momentum reading'],
+        ["Bollinger Bands", t.bollinger ? esc(`Lower ${t.bollinger.lower} / Mid ${t.bollinger.mid} / Upper ${t.bollinger.upper}`) : 'n/a', 'Volatility envelope'],
+        ["Moving Averages", t.moving_averages ? esc(`SMA50 ${t.moving_averages.sma_50 ?? 'n/a'} • SMA200 ${t.moving_averages.sma_200 ?? 'n/a'}`) : 'n/a', 'Trendline test'],
+        ["ATR (14)", t.atr_14 != null ? esc(t.atr_14) : 'n/a', 'Daily volatility'],
+        ["Volume", t.volume_last != null ? esc(`${Number(t.volume_last).toLocaleString()} (20d avg: ${t.volume_20d_avg != null ? Number(t.volume_20d_avg).toLocaleString() : 'n/a'})`) : 'n/a', 'Institutional participation'],
+        ["Support / Resistance", esc(`Supp: ${t.support || 'n/a'} • Res: ${t.resistance || 'n/a'}`), 'Key price pivots'],
+        ["Market Regime (Macro)", esc(`SPY: ${mr.spy_price ?? 'n/a'} • VIX: ${mr.vix ?? 'n/a'} • 10Y Yield: ${mr.us_10y_yield ?? 'n/a'}%`), esc(mr.spy_regime || '')]
+      ];
+      document.getElementById("technicalsTableBody").innerHTML = tRows.map(row => `
+        <tr>
+          <td><strong>${esc(row[0])}</strong></td><td>${row[1]}</td><td>${row[2]}</td>
+        </tr>
+      `).join('');
+
+      // Sentiment
+      const sBandBadge = document.getElementById("sentimentBandBadge");
+      const band = s.overall_band || 'Neutral';
+      sBandBadge.textContent = band;
+      sBandBadge.className = `call-badge call-${band.includes('Bull') ? 'BUY' : (band.includes('Bear') ? 'SELL' : 'HOLD')}`;
+      document.getElementById("sentimentScoreText").textContent = s.overall_score != null ? `${s.overall_score} / 10` : 'n/a';
+      document.getElementById("sentimentConfidenceText").textContent = s.confidence || 'n/a';
+
+      document.getElementById("sentimentTableBody").innerHTML = (s.catalysts || []).map(c => {
+        const imp = String(c.impact || '');
+        const color = imp.includes('Pos') ? 'var(--accent-green)' : (imp.includes('Neg') ? 'var(--accent-red)' : 'var(--accent-amber)');
+        return `
+          <tr>
+            <td>${esc(c.date || '')}</td>
+            <td><strong>${esc(c.headline || '')}</strong></td>
+            <td><span style="font-weight:600; color:${color}">${esc(imp || 'Neutral')}</span></td>
+            <td>${esc(c.summary || '')}</td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="4">No catalysts extracted.</td></tr>';
+
+      // Debate
+      document.getElementById("bullSummaryText").textContent = d.bull?.summary || 'No bull summary available.';
+      document.getElementById("bullStrongestPointText").textContent = `🎯 STRONGEST POINT: ${d.bull?.strongest_point || 'n/a'}`;
+      document.getElementById("bearSummaryText").textContent = d.bear?.summary || 'No bear summary available.';
+      document.getElementById("bearStrongestPointText").textContent = `⚠️ STRONGEST POINT: ${d.bear?.strongest_point || 'n/a'}`;
+
+      // Risk Stances
+      const stances = [
+        { key: 'aggressive', label: 'Aggressive Analyst', color: '#60a5fa', badgeClass: 'call-BUY' },
+        { key: 'conservative', label: 'Conservative Analyst', color: '#f87171', badgeClass: 'call-SELL' },
+        { key: 'neutral', label: 'Neutral Analyst', color: '#38bdf8', badgeClass: 'call-HOLD' }
+      ];
+      document.getElementById("riskStancesGrid").innerHTML = stances.map(st => {
+        const entry = r[st.key] || {};
+        const chosenTag = entry.chosen ? ' (Chosen)' : '';
+        return `
+          <div class="risk-box ${entry.chosen ? 'chosen' : ''}">
+            <h4 style="color:${st.color}; margin-bottom:8px;">${st.label}${chosenTag}</h4>
+            <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:12px;">${esc(entry.notes || 'No notes available.')}</p>
+            <div class="call-badge ${st.badgeClass}" style="font-size:0.75rem; padding:4px 10px;">${esc(entry.verdict || 'n/a')}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Execution Mandates
+      const emList = document.getElementById("executionMandatesList");
+      emList.innerHTML = (dec.execution_mandates || []).map(m => `<li>${esc(m)}</li>`).join('') || '<li>See markdown report for execution details.</li>';
+
+      // Raw JSON
+      document.getElementById("rawJsonViewer").textContent = JSON.stringify(data, null, 2);
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+
+      document.getElementById(tabId).classList.add("active");
+      if (btn) btn.classList.add("active");
+    }
+
+    function handleFileSelect(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const incoming = Array.isArray(parsed) ? parsed : [parsed];
+          incoming.forEach(item => {
+            runsData = runsData.filter(r => !(r.ticker === item.ticker && r.date === item.date));
+            runsData.unshift(item);
+          });
+          document.getElementById("emptyState").style.display = "none";
+          document.getElementById("dashboardContent").style.display = "block";
+          const first = incoming[0];
+          populateStockDropdown(first?.ticker, first?.date);
+        } catch (err) {
+          alert("Error parsing JSON: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function copyCurrentJSON() {
+      if (!currentRun) return;
+      navigator.clipboard.writeText(JSON.stringify(currentRun, null, 2)).then(() => {
+        alert("JSON copied to clipboard!");
+      });
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

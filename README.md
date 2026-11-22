@@ -4,7 +4,7 @@ Agent skills for trading research, for **Claude Code** and other tools that load
 
 | Skill | What it does |
 |---|---|
-| [`trading-agents`](skills/trading-agents/) | Multi-agent stock analysis: analysts → bull/bear debate → trader → risk debate → portfolio manager. Portfolio-aware, with optional moomoo integration. |
+| [`trading-agents`](skills/trading-agents/) | Multi-agent stock analysis: analysts → bull/bear debate → trader → risk debate → portfolio manager. Portfolio-aware, with structured JSON reports, an offline interactive HTML dashboard, and optional moomoo integration. |
 
 ---
 
@@ -27,6 +27,8 @@ It is **portfolio-aware**: give it your holdings and it judges the ticker agains
 ### What you get
 
 - `reports/YYYY-MM-DD-TICKER.md`: the full report, with every stage's reasoning and a decision summary.
+- `reports/YYYY-MM-DD-TICKER.json`: machine-readable structured output capturing decision parameters, fundamentals, technicals/OHLCV, sentiment catalysts, bull/bear debate, and risk verdicts.
+- `reports/dashboard.html` + `reports/data.js`: unified, offline-ready interactive HTML dashboard to browse and filter analyses by ticker and date directly via `file://` (no local server required), plus manual `+ Load JSON` import.
 - `reports/ledger.md`: one row per call, graded automatically as each horizon matures.
 - Deterministic Python for the number-crunching (indicators, FX, concentration, ledger math), so the LLM spends its tokens on judgment.
 
